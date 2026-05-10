@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using TaskTracker;
+﻿using TaskTracker.Enums;
+using TaskTracker.Services;
 
 if (args.Length == 0 || args[0] != "task-cli")
 {
@@ -12,68 +12,43 @@ else if (args.Length < 2)
     return;
 }
 
-string command = args[1].ToLower();
-string filePath = "tasks.json";
+var taskService = new TaskService("tasks.json");
+var commandMap = new Dictionary<string, CommandEnum>
+{
+    { "add", CommandEnum.Add },
+    { "update", CommandEnum.Update },
+    { "delete", CommandEnum.Delete },
+    { "mark-in-progress", CommandEnum.MarkInProgress },
+    { "mark-done", CommandEnum.MarkDone },
+    { "list", CommandEnum.List }
+};
 
-// Load existing tasks or start fresh
-List<TaskItem> tasks = File.Exists(filePath)
-    ? JsonSerializer.Deserialize<List<TaskItem>>(File.ReadAllText(filePath)) ?? new List<TaskItem>()
-    : new List<TaskItem>();
+if (!commandMap.TryGetValue(args[1].ToLower(), out CommandEnum command))
+{
+    PrintError($"Unknown command: {args[1]}");
+    return;
+}
 
 switch (command)
 {
-    case "add":
-        if (args.Length < 3)
-        {
-            PrintError("Missing task description for 'add' command.");
-            return;
-        }
-        AddTask(args[2]);
+    case CommandEnum.Add:
+        taskService.Add(args[2]);
         break;
-    case "update":
+    case CommandEnum.Update:
+        taskService.Update(int.Parse(args[2]), args[3]);
+        break;
+    case CommandEnum.Delete:
+        taskService.Delete(int.Parse(args[2]));
+        break;
+    case CommandEnum.MarkInProgress:
         Console.WriteLine("TODO");
         break;
-    case "delete":
+    case CommandEnum.MarkDone:
         Console.WriteLine("TODO");
         break;
-    case "mark-in-progress":
+    case CommandEnum.List:
         Console.WriteLine("TODO");
         break;
-    case "mark-done":
-        Console.WriteLine("TODO");
-        break;
-    case "list":
-        Console.WriteLine("TODO");
-        break;
-    default:
-        PrintError($"Unknown command: {command}");
-        break;
-}
-
-
-
-// Add a new task
-void AddTask(string description)
-{
-    var newTask = new TaskItem
-    {
-        Id = tasks.Count + 1,
-        Description = description,
-        Status = "todo",
-        CreatedAt = DateTime.Now,
-        UpdatedAt = DateTime.Now
-    };
-
-    tasks.Add(newTask);
-    SaveTasks();
-    Console.WriteLine($"Task added successfully (ID: 1)");
-}
-
-// Save tasks back to JSON file
-void SaveTasks()
-{
-    var options = new JsonSerializerOptions { WriteIndented = true };
-    File.WriteAllText(filePath, JsonSerializer.Serialize(tasks, options));
 }
 
 // Customized error message display
