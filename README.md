@@ -122,14 +122,16 @@ Tasks are saved to **`tasks.json`** in the working directory, created automatica
 ```
 task-tracker-cli/
 ├── Program.cs                  # Entry point and command routing
-├── TaskItem.cs                 # Task model
+├── Models/
+│   └── TaskItem.cs             # Task model
 ├── Services/
 │   └── TaskService.cs          # Task business logic
 ├── Helpers/
 │   ├── ConsoleHelper.cs        # Colored output and table formatting
 │   └── ArgsHelper.cs           # CLI argument validation
 ├── Enums/
-│   └── CommandEnum.cs          # Supported commands
+│   ├── CommandEnum.cs          # Supported commands
+│   └── TaskStatusEnum.cs       # Task status values
 ├── tasks.json                  # Auto-generated task storage (git-ignored)
 └── README.md
 ```
