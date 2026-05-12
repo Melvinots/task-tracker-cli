@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
+using TaskTracker.Helpers;
 using TaskTracker.Models;
 
 namespace TaskTracker.Services
@@ -32,50 +30,70 @@ namespace TaskTracker.Services
 
             _tasks.Add(newTask);
             this.SaveTasks();
-            Console.WriteLine($"Task added successfully (ID: {newTask.Id})");
+            ConsoleHelper.Success($"Task created successfully (ID: {newTask.Id})");
         }
 
         public void Update(int id, string description)
         {
             var task = this.FindById(id);
-            if (task == null) { Console.WriteLine($"Task {id} not found."); return; }
+            if (task == null) { ConsoleHelper.Error($"Task ID {id} not found."); return; }
 
             task.Description = description;
             task.UpdatedAt = DateTime.Now;
             this.SaveTasks();
-            Console.WriteLine($"Task updated successfully (ID: {task.Id})");
+            ConsoleHelper.Success($"Task updated successfully (ID: {task.Id})");
         }
 
         public void Delete(int id)
         {
             var task = this.FindById(id);
-            if (task == null) { Console.WriteLine($"Task {id} not found."); return; }
+            if (task == null) { ConsoleHelper.Error($"Task ID {id} not found."); return; }
 
             _tasks.Remove(task);
             this.SaveTasks();
-            Console.WriteLine($"Task deleted successfully (ID: {task.Id})");
+            ConsoleHelper.Success($"Task deleted successfully (ID: {task.Id})");
         }
 
         public void MarkInProgress(int id)
         {
-            throw new NotImplementedException();
+            var task = this.FindById(id);
+            if (task == null) { ConsoleHelper.Error($"Task ID {id} not found."); return; }
+
+            task.Status = "in-progress";
+            this.SaveTasks();
+            ConsoleHelper.Success($"Task marked as in progress (ID: {task.Id})");
         }
 
         public void MarkDone(int id)
         {
-            throw new NotImplementedException();
+            var task = this.FindById(id);
+            if (task == null) { ConsoleHelper.Error($"Task ID {id} not found."); return; }
+
+            task.Status = "done";
+            this.SaveTasks();
+            ConsoleHelper.Success($"Task marked as done (ID: {task.Id})");
         }
 
         public void List(string? status = null)
         {
-            throw new NotImplementedException();
+            var filteredTasks = string.IsNullOrEmpty(status)
+                ? _tasks
+                : _tasks.Where(t => t.Status?.Equals(status, StringComparison.OrdinalIgnoreCase) == true).ToList();
+
+            if (!filteredTasks.Any())
+            {
+                ConsoleHelper.Warning("No tasks available.");
+                return;
+            }
+
+            ConsoleHelper.PrintTable(filteredTasks);
         }
 
         private TaskItem? FindById(int id)
         {
             return _tasks.FirstOrDefault(t => t.Id == id);
         }
-
+            
         private void SaveTasks()
         {
             var options = new JsonSerializerOptions { WriteIndented = true };

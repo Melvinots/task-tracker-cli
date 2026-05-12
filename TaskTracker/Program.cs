@@ -1,62 +1,52 @@
 ﻿using TaskTracker.Enums;
 using TaskTracker.Services;
+using TaskTracker.Helpers;
 
-if (args.Length == 0 || args[0] != "task-cli")
+if (args.Length < 2 || args[0] != "task-cli")
 {
-    PrintError("Invalid format. Use: task-cli [arguments]");
-    return;
-}
-else if (args.Length < 2)
-{
-    PrintError("Invalid number of arguments.");
+    ConsoleHelper.Error("Usage: task-cli <command> [arguments]");
     return;
 }
 
 var taskService = new TaskService("tasks.json");
-var commandMap = new Dictionary<string, CommandEnum>
-{
-    { "add", CommandEnum.Add },
-    { "update", CommandEnum.Update },
-    { "delete", CommandEnum.Delete },
-    { "mark-in-progress", CommandEnum.MarkInProgress },
-    { "mark-done", CommandEnum.MarkDone },
-    { "list", CommandEnum.List }
-};
+var rawCommand = args[1].Replace("-", "");
 
-if (!commandMap.TryGetValue(args[1].ToLower(), out CommandEnum command))
+if (!Enum.TryParse(rawCommand, ignoreCase: true, out CommandEnum command) || !Enum.IsDefined(typeof(CommandEnum), command))
 {
-    PrintError($"Unknown command: {args[1]}");
+    ConsoleHelper.Error($"Unknown command: {args[1]}");
     return;
 }
 
 switch (command)
 {
     case CommandEnum.Add:
+        if (!ArgsHelper.Require(args, 3, "add <description>")) break;
         taskService.Add(args[2]);
         break;
     case CommandEnum.Update:
-        taskService.Update(int.Parse(args[2]), args[3]);
+        if (!ArgsHelper.Require(args, 4, "update <id> <description>")) break;
+        if (!ArgsHelper.TryParseId(args[2], out int updateId)) break;
+        taskService.Update(updateId, args[3]);
         break;
     case CommandEnum.Delete:
-        taskService.Delete(int.Parse(args[2]));
+        if (!ArgsHelper.Require(args, 3, "delete <id>")) break;
+        if (!ArgsHelper.TryParseId(args[2], out int deleteId)) break;
+        taskService.Delete(deleteId);
         break;
     case CommandEnum.MarkInProgress:
-        Console.WriteLine("TODO");
+        if (!ArgsHelper.Require(args, 3, "mark-in-progress <id>")) break;
+        if (!ArgsHelper.TryParseId(args[2], out int inProgressId)) break;
+        taskService.MarkInProgress(inProgressId);
         break;
     case CommandEnum.MarkDone:
-        Console.WriteLine("TODO");
+        if (!ArgsHelper.Require(args, 3, "mark-done <id>")) break;
+        if (!ArgsHelper.TryParseId(args[2], out int doneId)) break;
+        taskService.MarkDone(doneId);
         break;
     case CommandEnum.List:
-        Console.WriteLine("TODO");
+        if (!ArgsHelper.Require(args, 2, "list <status>")) break;
+        taskService.List(args.Length > 2 ? args[2] : null);
         break;
-}
-
-// Customized error message display
-void PrintError(string message)
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("\n" + "ERROR: " + message + "\n");
-    Console.ResetColor();
 }
 
 Console.ReadLine();
