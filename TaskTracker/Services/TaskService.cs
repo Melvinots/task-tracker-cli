@@ -4,7 +4,7 @@ using TaskTracker.Models;
 
 namespace TaskTracker.Services
 {
-    public class TaskService
+    public class TaskService : ITaskService
     {
         private readonly string _filePath;
         private List<TaskItem> _tasks;
@@ -21,7 +21,7 @@ namespace TaskTracker.Services
         {
             var newTask = new TaskItem
             {
-                Id = _tasks.Count > 0 ? _tasks.Max(t => t.Id) + 1 : 1,
+                Id = _tasks.Any() ? _tasks.Max(t => t.Id) + 1 : 1,
                 Description = description,
                 Status = "todo",
                 CreatedAt = DateTime.Now,
@@ -89,12 +89,12 @@ namespace TaskTracker.Services
             ConsoleHelper.PrintTable(filteredTasks);
         }
 
-        private TaskItem? FindById(int id)
+        public TaskItem? FindById(int id)
         {
             return _tasks.FirstOrDefault(t => t.Id == id);
         }
             
-        private void SaveTasks()
+        public void SaveTasks()
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
             File.WriteAllText(_filePath, JsonSerializer.Serialize(_tasks, options));
